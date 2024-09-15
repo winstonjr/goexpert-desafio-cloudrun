@@ -3,14 +3,19 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/winstonjr/goexpert-desafio-cloudrun/configs"
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/infra/integration"
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/usecase"
 	"os"
 )
 
 func main() {
+	config, err := configs.LoadConfig(".")
+	if err != nil {
+		panic(err)
+	}
 	viacepIntegration := integration.NewViacepIntegration()
-	weatherapiIntegration := integration.NewWeatherapiIntegration("23b020471bba461680101942241309")
+	weatherapiIntegration := integration.NewWeatherapiIntegration(config.WeatherApiKey)
 	checkWeatherUseCase := usecase.NewCheckWeatherUseCase(weatherapiIntegration, viacepIntegration)
 	for _, cep := range os.Args[1:] {
 		temperature, err := checkWeatherUseCase.Execute(cep)
