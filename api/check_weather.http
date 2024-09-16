@@ -1,0 +1,15 @@
+GET http://localhost:8080/?cep=01311100
+Host: localhost:8080
+Content-Type: application/json
+
+###
+
+GET http://localhost:8080/?cep=1311100
+Host: localhost:8080
+Content-Type: application/json
+
+###
+
+GET http://localhost:8080/?cep=00000000
+Host: localhost:8080
+Content-Type: application/json
