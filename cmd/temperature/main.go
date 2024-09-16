@@ -6,7 +6,7 @@ import (
 	"github.com/winstonjr/goexpert-desafio-cloudrun/configs"
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/infra/integration"
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/usecase"
-	"os"
+	"net/http"
 )
 
 func main() {
@@ -17,16 +17,51 @@ func main() {
 	viacepIntegration := integration.NewViacepIntegration()
 	weatherapiIntegration := integration.NewWeatherapiIntegration(config.WeatherApiKey)
 	checkWeatherUseCase := usecase.NewCheckWeatherUseCase(weatherapiIntegration, viacepIntegration)
-	for _, cep := range os.Args[1:] {
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		cep := r.URL.Query().Get("cep")
+		if cep == "" {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			_, _ = w.Write([]byte(`invalid zipcode`))
+			return
+		}
 		temperature, err := checkWeatherUseCase.Execute(cep)
 		if err != nil {
-			panic(err)
+			if err.Error() == "invalid zipcode" {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				_, _ = w.Write([]byte(`invalid zipcode`))
+				return
+			} else if err.Error() == "can not find zipcode" {
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`can not find zipcode`))
+				return
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
-
-		data, err := json.Marshal(temperature)
+		err = json.NewEncoder(w).Encode(temperature)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Erro ao realizar parse do json: %v\n", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		fmt.Println(string(data))
+	})
+	fmt.Println("Listening on port :8080")
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		panic(err)
 	}
+
+	//for _, cep := range os.Args[1:] {
+	//	temperature, err := checkWeatherUseCase.Execute(cep)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	data, err := json.Marshal(temperature)
+	//	if err != nil {
+	//		fmt.Fprintf(os.Stderr, "Erro ao realizar parse do json: %v\n", err)
+	//	}
+	//	fmt.Println(string(data))
+	//}
 }
