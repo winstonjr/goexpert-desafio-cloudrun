@@ -5,6 +5,7 @@ import (
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/infra/types"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 type locationDTO struct {
@@ -70,7 +71,7 @@ func NewWeatherapiIntegration(apiKey string) *WeatherapiIntegration {
 }
 
 func (w *WeatherapiIntegration) GetCelsiusTemperatureByCity(city string, resultch chan<- types.Either[float64]) {
-	url := "https://api.weatherapi.com/v1/current.json?key=" + w.apiKey + "&q=" + city + "&aqi=no"
+	url := "https://api.weatherapi.com/v1/current.json?key=" + w.apiKey + "&q=" + url.QueryEscape(city) + "&aqi=no"
 	req, err := http.Get(url)
 	if err != nil {
 		resultch <- types.Either[float64]{Left: err}
