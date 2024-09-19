@@ -6,6 +6,7 @@ import (
 	"github.com/winstonjr/goexpert-desafio-cloudrun/configs"
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/infra/integration"
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/usecase"
+	"log"
 	"net/http"
 )
 
@@ -24,24 +25,31 @@ func main() {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			_, _ = w.Write([]byte(`invalid zipcode`))
 			return
+			log.Println("erro 422")
 		}
+		log.Println("cep acquired", cep)
 		temperature, err := checkWeatherUseCase.Execute(cep)
 		if err != nil {
+			log.Println("temperature error", err.Error())
 			if err.Error() == "invalid zipcode" {
+				log.Println("temperature error", 422)
 				w.WriteHeader(http.StatusUnprocessableEntity)
 				_, _ = w.Write([]byte(`invalid zipcode`))
 				return
 			} else if err.Error() == "can not find zipcode" {
+				log.Println("temperature error", 404)
 				w.WriteHeader(http.StatusNotFound)
 				_, _ = w.Write([]byte(`can not find zipcode`))
 				return
 			} else {
+				log.Println("temperature error", 500)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 		}
 		err = json.NewEncoder(w).Encode(temperature)
 		if err != nil {
+			log.Println("write to buffer error", 500)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

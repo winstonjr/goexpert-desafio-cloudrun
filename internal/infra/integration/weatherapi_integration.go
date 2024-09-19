@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/infra/types"
 	"io"
-	"net/http"
 	"net/url"
 )
 
@@ -71,8 +70,9 @@ func NewWeatherapiIntegration(apiKey string) *WeatherapiIntegration {
 }
 
 func (w *WeatherapiIntegration) GetCelsiusTemperatureByCity(city string, resultch chan<- types.Either[float64]) {
-	url := "https://api.weatherapi.com/v1/current.json?key=" + w.apiKey + "&q=" + url.QueryEscape(city) + "&aqi=no"
-	req, err := http.Get(url)
+	client := getHttpClient()
+	weatherUrl := "https://api.weatherapi.com/v1/current.json?key=" + w.apiKey + "&q=" + url.QueryEscape(city) + "&aqi=no"
+	req, err := client.Get(weatherUrl)
 	if err != nil {
 		resultch <- types.Either[float64]{Left: err}
 		return

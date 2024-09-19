@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"github.com/winstonjr/goexpert-desafio-cloudrun/internal/infra/types"
@@ -29,7 +30,8 @@ type viacepDTO struct {
 }
 
 func (o *ViacepIntegration) GetCity(cep string, resultch chan<- types.Either[string]) {
-	req, err := http.Get("https://viacep.com.br/ws/" + cep + "/json/")
+	client := getHttpClient()
+	req, err := client.Get("https://viacep.com.br/ws/" + cep + "/json/")
 	if err != nil {
 		resultch <- types.Either[string]{Left: err}
 		return
@@ -53,4 +55,11 @@ func (o *ViacepIntegration) GetCity(cep string, resultch chan<- types.Either[str
 	}
 	resultch <- types.Either[string]{Right: data.Localidade}
 	close(resultch)
+}
+
+func getHttpClient() *http.Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	return &http.Client{Transport: tr}
 }
