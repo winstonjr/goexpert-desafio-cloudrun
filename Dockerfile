@@ -6,5 +6,4 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o desafio-cloudrun ./cmd/temperature/main
 FROM scratch
 WORKDIR /app
 COPY --from=build /app/desafio-cloudrun .
-COPY --from=build /app/cmd/temperature/.env .
 ENTRYPOINT ["./desafio-cloudrun"]

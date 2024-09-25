@@ -1,25 +1,23 @@
 package configs
 
-import "github.com/spf13/viper"
+import (
+	"errors"
+	"github.com/spf13/viper"
+)
 
 type conf struct {
 	WeatherApiKey string `mapstructure:"WEATHER_API_KEY"`
 }
 
-func LoadConfig(path string) (*conf, error) {
-	var cfg *conf
-	viper.SetConfigName("app_config")
-	viper.SetConfigType("env")
-	viper.AddConfigPath(path)
-	viper.SetConfigFile(".env")
-	viper.AutomaticEnv()
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(err)
+func LoadConfig() (*conf, error) {
+	v := viper.New()
+	v.AutomaticEnv()
+
+	wak := v.GetString("WEATHER_API_KEY")
+	if wak == "" {
+		return nil, errors.New("WEATHER_API_KEY environment variable not set")
 	}
-	err = viper.Unmarshal(&cfg)
-	if err != nil {
-		panic(err)
-	}
-	return cfg, err
+	c := &conf{WeatherApiKey: wak}
+
+	return c, nil
 }
